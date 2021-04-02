@@ -3,16 +3,6 @@
 import numpy as np
 
 
-# Sample-based measures:
-# Hamming Loss, Accuracy, Precision, Recall, F1-Score:
-def calculate_hamming_loss(real_labels, predicted_labels):
-    num_samples, num_classes = real_labels.shape
-    xor_arrays = np.logical_xor(real_labels, predicted_labels).astype('float')
-    sum_rows = np.sum(xor_arrays, axis=1) / num_classes
-    hamming_loss = sum_rows.sum() / num_samples
-    return hamming_loss
-
-
 def calculate_accuracy(real_labels, predicted_labels, average=True):
     num_samples = real_labels.shape[0]
     true_positive = np.sum(np.logical_and(real_labels, predicted_labels), axis=1).astype('float')
@@ -155,3 +145,32 @@ def calculate_micro_f1_score_from_precision_recall(precision, recall):
     else:
         f1_score = f1_num / f1_den
     return f1_score
+
+
+def calculate_class_label_statistics(y):
+    unique, counts = np.unique(y, return_counts=True)
+    class_stats = dict(zip(unique, counts))
+
+    return sorted(class_stats.items(), key=lambda x: -x[1])
+
+
+
+def calculate_false_pos(y_true, y_pred):
+    """
+    Metric for Keras that *estimates* false positives while training
+    This will not be completely accurate because it weights batches
+    equally
+    """
+    from tensorflow.keras import backend as K
+    return K.sum(K.cast(y_pred * (1 - y_true) > 0.5, 'float')) / K.maximum(1.0, K.sum(1 - y_true))
+
+
+def calculate_false_neg(y_true, y_pred):
+    """
+    Metric for Keras that *estimates* false negatives while training
+    This will not be completely accurate because it weights batches
+    equally
+    """
+    from tensorflow.keras import backend as K
+    return K.sum(K.cast((1 - y_pred) * (0 + y_true) > 0.5, 'float')) / K.maximum(1.0, K.sum(0 + y_true))
+
