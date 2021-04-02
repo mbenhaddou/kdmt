@@ -1,8 +1,13 @@
 import errno
-import io
 import json
 import os
 import pickle
+import codecs
+import gzip
+import io
+import tarfile
+import six
+
 
 import simplejson
 
@@ -22,19 +27,40 @@ def read_json_file(filename, encoding="utf-8"):
         raise ValueError("Failed to read json from '{}'. Error: "
                          "{}".format(os.path.abspath(filename), e))
 
+def create_dir(folder_name, force_perm=None):
+    """Create the specified folder.
 
-def create_dir(dir_path):
-    """Creates a directory and its super paths.
+    If the parent folders do not exist, they are also created.
+    If the folder already exists, nothing is done.
 
-    Succeeds even if the path already exists."""
+    Parameters
+    ----------
+    folder_name : str
+        Name of the folder to create.
+    force_perm : str
+        Mode to use for folder creation.
 
-    try:
-        os.makedirs(dir_path)
-    except OSError as e:
-        # be happy if someone already created the path
-        if e.errno != errno.EEXIST:
-            raise
+    """
+    if os.path.exists(folder_name):
+        return
+    intermediary_folders = folder_name.split(os.path.sep)
 
+    # Remove invalid elements from intermediary_folders
+    if intermediary_folders[-1] == "":
+        intermediary_folders = intermediary_folders[:-1]
+    if force_perm:
+        force_perm_path = folder_name.split(os.path.sep)
+        if force_perm_path[-1] == "":
+            force_perm_path = force_perm_path[:-1]
+
+    for i in range(1, len(intermediary_folders)):
+        folder_to_create = os.path.sep.join(intermediary_folders[:i + 1])
+
+        if os.path.exists(folder_to_create):
+            continue
+        os.mkdir(folder_to_create)
+        if force_perm:
+            os.chmod(folder_to_create, force_perm)
 
 def json_to_string(obj, **kwargs):
     indent = kwargs.pop("indent", 2)
@@ -130,3 +156,62 @@ def create_dir_for_file(file_path):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
+
+
+def open_gziped(filename, mode='r', encoding=None):
+    """Open a text file with encoding and optional gzip compression.
+
+    Note that on legacy Python any encoding other than ``None`` or opening
+    GZipped files will return an unpicklable file-like object.
+
+    Parameters
+    ----------
+    filename : str
+        The filename to read.
+    mode : str, optional
+        The mode with which to open the file. Defaults to `r`.
+    encoding : str, optional
+        The encoding to use (see the codecs documentation_ for supported
+        values). Defaults to ``None``.
+
+    .. _documentation:
+    https://docs.python.org/3/library/codecs.html#standard-encodings
+
+    """
+    if filename.endswith('.gz'):
+        if six.PY2:
+            zf = io.BufferedReader(gzip.open(filename, mode))
+            if encoding:
+                return codecs.getreader(encoding)(zf)
+            else:
+                return zf
+        else:
+            return io.BufferedReader(gzip.open(filename, mode,
+                                               encoding=encoding))
+    if six.PY2:
+        if encoding:
+            return codecs.open(filename, mode, encoding=encoding)
+        else:
+            return open(filename, mode)
+    else:
+        return open(filename, mode, encoding=encoding)
+
+
+def tar_open(f):
+    """Open either a filename or a file-like object as a TarFile.
+
+    Parameters
+    ----------
+    f : str or file-like object
+        The filename or file-like object from which to read.
+
+    Returns
+    -------
+    TarFile
+        A `TarFile` instance.
+
+    """
+    if isinstance(f, six.string_types):
+        return tarfile.open(name=f)
+    else:
+        return tarfile.open(fileobj=f)

@@ -154,7 +154,6 @@ def calculate_class_label_statistics(y):
     return sorted(class_stats.items(), key=lambda x: -x[1])
 
 
-
 def calculate_false_pos(y_true, y_pred):
     """
     Metric for Keras that *estimates* false positives while training
