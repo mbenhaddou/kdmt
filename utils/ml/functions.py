@@ -11,6 +11,91 @@ from sklearn.metrics import log_loss as sklearn_log_loss
 LOSS_BIAS = 0.9  # [0..1] where 1 is inf bias
 
 
+
+def pad_sentences(
+        sequences: np.ndarray, max_length: int = None, padding_value: int = 0, padding_style="post"
+) -> np.ndarray:
+    """
+    Pad input sequences up to max_length
+    values are aligned to the right
+
+    Args:
+        sequences (iter): a 2D matrix (np.array) to pad
+        max_length (int, optional): max length of resulting sequences
+        padding_value (int, optional): padding value
+        padding_style (str, optional): add padding values as prefix (use with 'pre')
+            or postfix (use with 'post')
+
+    Returns:
+        input sequences padded to size 'max_length'
+    """
+    if isinstance(sequences, list) and len(sequences) > 0:
+        try:
+            sequences = np.asarray(sequences)
+        except ValueError:
+            print("cannot convert sequences into numpy array")
+    assert hasattr(sequences, "shape")
+    if len(sequences) < 1:
+        return sequences
+    if max_length is None:
+        max_length = np.max([len(s) for s in sequences])
+    elif max_length < 1:
+        raise ValueError("max sequence length must be > 0")
+    if max_length < 1:
+        return sequences
+    padded_sequences = np.ones((len(sequences), max_length), dtype=np.int32) * padding_value
+    for i, sent in enumerate(sequences):
+        if padding_style == "post":
+            trunc = sent[-max_length:]
+            padded_sequences[i, : len(trunc)] = trunc
+        elif padding_style == "pre":
+            trunc = sent[:max_length]
+            padded_sequences[i, -trunc:] = trunc
+    return padded_sequences.astype(dtype=np.int32)
+
+
+def one_hot(mat: np.ndarray, num_classes: int) -> np.ndarray:
+    """
+    Convert a 1D matrix of ints into one-hot encoded vectors.
+
+    Arguments:
+        mat (numpy.ndarray): A 1D matrix of labels (int)
+        num_classes (int): Number of all possible classes
+
+    Returns:
+        numpy.ndarray: A 2D matrix
+    """
+    assert len(mat.shape) < 2 or isinstance(mat.shape, int)
+    vec = np.zeros((mat.shape[0], num_classes))
+    for i, v in enumerate(mat):
+        vec[i][v] = 1.0
+    return vec
+
+
+def one_hot_sentence(mat: np.ndarray, num_classes: int) -> np.ndarray:
+    """
+    Convert a 2D matrix of ints into one-hot encoded 3D matrix
+
+    Arguments:
+        mat (numpy.ndarray): A 2D matrix of labels (int)
+        num_classes (int): Number of all possible classes
+
+    Returns:
+        numpy.ndarray: A 3D matrix
+    """
+    new_mat = []
+    for i in range(mat.shape[0]):
+        new_mat.append(one_hot(mat[i], num_classes))
+    return np.asarray(new_mat)
+
+
+def class_label_statistics(y):
+    unique, counts = np.unique(y, return_counts=True)
+    class_stats = dict(zip(unique, counts))
+
+    return sorted(class_stats.items(), key=lambda x: -x[1])
+
+
 def set_loss_bias(bias: float):
     """
     Changes the loss bias
