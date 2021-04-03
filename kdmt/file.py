@@ -215,3 +215,32 @@ def tar_open(f):
         return tarfile.open(name=f)
     else:
         return tarfile.open(fileobj=f)
+
+def find_in_data_path(filename, paths):
+    """Searches for a file within on the paths.
+
+    This function loops over all paths defined in Fuel's data path and
+    returns the first path in which the file is found.
+
+    Parameters
+    ----------
+    filename : str
+        Name of the file to find.
+
+    Returns
+    -------
+    file_path : str
+        Path to the first file matching `filename` found in on the paths.
+
+    Raises
+    ------
+    IOError
+        If the file doesn't appear in one of the paths.
+
+    """
+    for path in paths:
+        path = os.path.expanduser(os.path.expandvars(path))
+        file_path = os.path.join(path, filename)
+        if os.path.isfile(file_path):
+            return file_path
+    raise IOError("{} not found in the provided path".format(filename))
