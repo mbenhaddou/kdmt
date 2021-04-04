@@ -1,6 +1,7 @@
 import functools
 import operator
-
+import collections
+from six import string_types
 import numpy as np
 
 
@@ -79,3 +80,26 @@ def get_dimensions(X):
             c = len(X)
 
     return r, c
+
+
+def isiter(obj):
+    try:
+        iter(obj)
+    except TypeError:
+        return False
+    else:
+        return True
+
+
+def _can_iterate(obj):
+    is_string = isinstance(obj, string_types)
+    is_iterable = isinstance(obj, collections.Iterable)
+
+    return is_iterable and not is_string
+
+def is_column_vector(x):
+    return len(x.shape) == 2 and x.shape[1] == 1
+
+
+def is_row_vector(x):
+    return len(x.shape) == 1

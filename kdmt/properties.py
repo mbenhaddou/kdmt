@@ -1,4 +1,5 @@
 import collections
+from decorator import decorator
 
 def lazy_property_factory(lazy_property):
     """Create properties that perform lazy loading of attributes."""
@@ -64,3 +65,23 @@ def do_not_pickle_attributes(*lazy_properties):
 
         return cls
     return wrap_class
+
+
+def requires_properties(properties):
+    @decorator
+    def _requires_properties(func, *args, **kwargs):
+        params = util.map_parameters_in_fn_call(args, kwargs, func)
+        obj = params.get('self')
+
+        if obj is None:
+            raise Exception('This decorator only works on instance methods')
+
+        missing = [p for p in properties if getattr(obj, p) is None]
+
+        if len(missing):
+            raise ValueError('{} requires {} to be set, missing: {}'
+                             .format(func.__name__, properties, missing))
+
+        return func(*args, **kwargs)
+
+    return _requires_properties

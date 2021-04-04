@@ -7,9 +7,31 @@ import gzip
 import io
 import tarfile
 import six
-
+import re
+import requests
+import urllib.parse
 
 import simplejson
+
+
+
+
+def filename_from_url(url):
+    """Parses a URL to determine a file name.
+
+    Parameters
+    ----------
+    url : str
+        URL to parse.
+
+    """
+    r = requests.get(url, stream=True)
+    if 'Content-Disposition' in r.headers:
+        filename = re.findall(r'filename=([^;]+)',
+                              r.headers['Content-Disposition'])[0].strip('"\"')
+    else:
+        filename = os.path.basename(urllib.parse.urlparse(url).path)
+    return filename
 
 
 def read_file(filename, encoding="utf-8"):
@@ -238,9 +260,25 @@ def find_in_data_path(filename, paths):
         If the file doesn't appear in one of the paths.
 
     """
+
+    if isinstance(paths, str):
+        paths=[paths]
     for path in paths:
         path = os.path.expanduser(os.path.expandvars(path))
         file_path = os.path.join(path, filename)
         if os.path.isfile(file_path):
             return file_path
     raise IOError("{} not found in the provided path".format(filename))
+
+def ensure_directory_exists(directory):
+    """Create directory (with parents) if does not exist, raise on failure.
+
+    Parameters
+    ----------
+    directory : str
+        The directory to create
+
+    """
+    if os.path.isdir(directory):
+        return
+    os.makedirs(directory)

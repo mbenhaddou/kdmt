@@ -1,3 +1,10 @@
+import re
+import pip
+import numpy as np
+import numbers
+from copy import copy
+import inspect
+from inspect import signature
 _get_attr_raise_on_attribute_error = "RAISE ON EXCEPTION"
 
 
@@ -71,7 +78,10 @@ def check_random_state(seed):
         return seed
     raise ValueError('{} cannot be used to seed a numpy.random.RandomState instance'.format(seed))
 
-
+def class_name(obj):
+    class_name = str(type(obj))
+    class_name = re.search(".*'(.+?)'.*", class_name).group(1)
+    return class_name
 
 def import_or_install(package):
     try:
@@ -137,3 +147,53 @@ def immutable(obj, recursive=True):
     setting. If the `recursive` flag is true, all attribute accesses will
     return an immutable-wrapped version of the "real" attribute."""
     return ImmutableWrapper(obj, recursive)
+
+def map_parameters_in_fn_call(args, kwargs, func):
+    """
+    Based on function signature, parse args to to convert them to key-value
+    pairs and merge them with kwargs
+    Any parameter found in args that does not match the function signature
+    is still passed.
+    Missing parameters are filled with their default values
+    """
+    # Get missing parameters in kwargs to look for them in args
+    args_spec = inspect.getargspec(func).args
+    params_all = set(args_spec)
+    params_missing = params_all - set(kwargs.keys())
+
+    if 'self' in args_spec:
+        offset = 1
+    else:
+        offset = 0
+
+    # Get indexes for those args
+    idxs = [args_spec.index(name) for name in params_missing]
+
+    # Parse args
+    args_parsed = dict()
+
+    for idx in idxs:
+        key = args_spec[idx]
+
+        try:
+            value = args[idx - offset]
+        except IndexError:
+            pass
+        else:
+            args_parsed[key] = value
+
+    parsed = copy(kwargs)
+    parsed.update(args_parsed)
+
+    # fill default values
+    default = {k: v.default for k, v
+               in signature(func).parameters.items()
+               if v.default != inspect._empty}
+
+    to_add = set(default.keys()) - set(parsed.keys())
+
+    default_to_add = {k: v for k, v in default.items() if k in to_add}
+    parsed.update(default_to_add)
+
+    return parsed
+
