@@ -285,3 +285,26 @@ class ComplexDeque():
         return 'FastBuffer: max_size: ' + str(self.max_size) \
                + ' - current_size: ' + str(self.current_size) \
                + ' - width: ' + str(self.width)
+
+class Table():
+    def __init__(self, content, header):
+        try:
+            self._tabulate = __import__('tabulate').tabulate
+        except:
+            raise ImportError('tabulate is required to use the table module')
+        self.content = content
+        self.header = header
+
+    def to_html(self):
+        return self._tabulate(self.content, headers=self.header,
+                              tablefmt='html')
+
+    def __str__(self):
+        return self._tabulate(self.content, headers=self.header,
+                              tablefmt='grid')
+
+    def _repr_html_(self):
+        return self.to_html()
+
+    def __repr__(self):
+        return str(self)
