@@ -32,18 +32,6 @@ def compute_at_thresholds(fn, y_true, y_score, n_thresholds=10, start=0.0):
     """
     Given scores, binarize them at different thresholds, then compute
     metrics
-
-    Examples
-    --------
-    >>> from kolibri.evaluation.metrics import compute_at_thresholds
-    >>> from sklearn.metrics import accuracy_score
-    >>> from sklearn.metrics import precision_score, recall_score, f1_score
-    >>> import numpy as np
-    >>> y_true = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 0])
-    >>> y_score = np.array([1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1])
-    >>> binarized = compute_at_thresholds([accuracy_score, precision_score,
-    ...                                    recall_score, f1_score],
-    ...                                    y_true, y_score)
     """
     if isiter(fn):
         (thresholds,

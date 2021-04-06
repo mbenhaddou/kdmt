@@ -53,7 +53,6 @@ def module_path_from_object(o):
     """Returns the fully qualified class path of the instantiated object."""
     return o.__class__.__module__ + "." + o.__class__.__name__
 
-
 def check_random_state(seed):
     """Turn seed into a np.random.RandomState instance.
 

@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from kdmt.ml.importance import feature_importances
 from kdmt.ml.metrics.plot.matplotlib import bar
-from kdmt.ml.metrics.plot import confusion_matrix as k_confusion_matrix
-from kdmt.ml.metrics.plot.metrics import precision_at
+from kdmt.ml.metrics.metrics import confusion_matrix as k_confusion_matrix
+from kdmt.ml.metrics.metrics import precision_at
 from kdmt.lists import is_column_vector, is_row_vector
 from kdmt.ml.metrics.plot.heatmap import default_heatmap
 

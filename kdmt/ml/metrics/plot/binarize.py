@@ -3,7 +3,7 @@ Tools for binarizing scores
 """
 import numpy as np
 
-from kolibri.evaluation import validate
+from kdmt.ml.metrics.plot import validate
 
 
 @validate.argument_is_proportion('top_proportion')
