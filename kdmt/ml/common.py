@@ -1,3 +1,5 @@
+import numpy as np
+import numbers
 
 def sklearn_numpy_warning_fix():
     """Fixes unecessary warnings emitted by sklearns use of numpy.

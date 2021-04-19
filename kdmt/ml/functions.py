@@ -24,7 +24,6 @@ def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum(axis=1, keepdims=1)
 
-
 def inv_sigmoid(x):
     """Inverse sigmoid (logit) for scalars"""
     return -np.log(1 / x - 1)

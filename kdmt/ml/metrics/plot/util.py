@@ -7,7 +7,7 @@ from collections import defaultdict
 from copy import copy
 from inspect import signature
 from itertools import product
-from kdmt.lists import _can_iterate
+from kdmt.lists import can_iterate
 
 @decorator
 def set_default_ax(func, *args, **kwargs):
@@ -70,9 +70,9 @@ def _product(k, v):
         Perform the product between two objects
         even if they don't support iteration
     """
-    if not _can_iterate(k):
+    if not can_iterate(k):
         k = [k]
-    if not _can_iterate(v):
+    if not can_iterate(v):
         v = [v]
     return list(product(k, v))
 

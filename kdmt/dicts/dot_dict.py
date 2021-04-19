@@ -30,7 +30,7 @@ class DotDict(dict):
             self[name] = value
 
     def __setitem__(self, name, value):
-        super(Dict, self).__setitem__(name, value)
+        super(DotDict, self).__setitem__(name, value)
         try:
             p = object.__getattribute__(self, '__parent')
             key = object.__getattribute__(self, '__key')

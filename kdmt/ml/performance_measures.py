@@ -173,3 +173,72 @@ def calculate_false_neg(y_true, y_pred):
     from tensorflow.keras import backend as K
     return K.sum(K.cast((1 - y_pred) * (0 + y_true) > 0.5, 'float')) / K.maximum(1.0, K.sum(0 + y_true))
 
+def calculate_hamming_score(true_labels, predicts):
+    """ Computes de hamming score, which is known as the label-based accuracy,
+    designed for multi-label problems. It's defined as the number of correctly
+    predicted y_values divided by all classified y_values.
+    """
+    if not hasattr(true_labels, 'shape'):
+        true_labels = np.asarray(true_labels)
+    if not hasattr(predicts, 'shape'):
+        predicts = np.asarray(predicts)
+    N, L = true_labels.shape
+    return np.sum((true_labels == predicts) * 1.) / N / L
+
+
+def calculate_j_index(true_labels, predicts):
+    """ Computes the Jaccard Index of the given set, which is also called the
+    'intersection over union' in multi-label settings. It's defined as the
+    intersection between the true label's set and the prediction's set,
+    divided by the sum, or union, of those two sets.
+    Parameters
+    ----------
+    true_labels: numpy.ndarray of shape (n_samples, n_target_tasks)
+        A matrix with the true y_values for all the classification tasks and for
+        n_samples.
+    predicts: numpy.ndarray of shape (n_samples, n_target_tasks)
+        A matrix with the predictions for all the classification tasks and for
+        n_samples.
+    Returns
+    -------
+    float
+        The J-index, or 'intersection over union', for the given sets.
+    """
+    if not hasattr(true_labels, 'shape'):
+        true_labels = np.asarray(true_labels)
+    if not hasattr(predicts, 'shape'):
+        predicts = np.asarray(predicts)
+    N, L = true_labels.shape
+    s = 0.0
+    for i in range(N):
+        inter = sum((true_labels[i, :] * predicts[i, :]) > 0) * 1.
+        union = sum((true_labels[i, :] + predicts[i, :]) > 0) * 1.
+        if union > 0:
+            s += inter / union
+        elif np.sum(true_labels[i, :]) == 0:
+            s += 1.
+    return s * 1. / N
+
+
+def calculate_exact_match(true_labels, predicts):
+    """ This is the most strict metric for the multi label setting. It's defined
+    as the percentage of samples that have all their y_values correctly classified.
+    Parameters
+    ----------
+    true_labels: numpy.ndarray of shape (n_samples, n_target_tasks)
+        A matrix with the true y_values for all the classification tasks and for
+        n_samples.
+    predicts: numpy.ndarray of shape (n_samples, n_target_tasks)
+        A matrix with the predictions for all the classification tasks and for
+        n_samples.
+    Returns
+    -------
+    float
+        The exact match percentage between the given sets.
+    """
+    if not hasattr(true_labels, 'shape'):
+        true_labels = np.asarray(true_labels)
+    if not hasattr(predicts, 'shape'):
+        predicts = np.asarray(predicts)
+    N, L = true_labels.shape
+    return np.sum(np.sum((true_labels == predicts) * 1, axis=1) == L) * 1. / N

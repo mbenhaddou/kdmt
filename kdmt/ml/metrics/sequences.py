@@ -13,6 +13,46 @@ from typing import List, Dict, Tuple, Any
 
 import numpy as np
 
+def get_conll_scores(predictions, y, y_lex, unk="O", pad=0):
+    """Get Conll style scores (precision, recall, f1)
+    """
+    if isinstance(predictions, list):
+        predictions = predictions[-1]
+    test_p = predictions
+
+    if len(test_p.shape) > 1:
+        test_p = test_p.argmax(len(test_p.shape) - 1)
+    test_y = y
+
+    prediction_data = []
+
+    if len(test_y.shape) == 1:
+        y_true = []
+        y_pred = []
+        for i in list(test_y):
+            y_true.append(y_lex[i])
+        for i in list(test_p):
+            y_pred.append(y_lex[i])
+    else:
+        for n in range(test_y.shape[0]):
+            test_yval = []
+            for i in list(test_y[n]):
+                if i == pad:
+                    continue
+                try:
+                    test_yval.append(y_lex[i])
+                except KeyError:
+                    pass
+            test_pval = [unk] * len(test_yval)
+            for e, i in enumerate(list(test_p[n])[: len(test_pval)]):
+                try:
+                    test_pval[e] = y_lex[i]
+                except KeyError:
+                    pass
+            prediction_data.append((test_yval, test_pval))
+        y_true, y_pred = list(zip(*prediction_data))
+    return classification_report(y_true, y_pred, digits=3)
+
 
 def bulk_get_entities(seq_list: List[List[str]], *, suffix: bool = False) -> List[Tuple[str, int, int]]:
     seq = [item for sublist in seq_list for item in sublist + ['O']]
@@ -27,7 +67,7 @@ def get_entities(seq: List[str], *, suffix: bool = False) -> List[Tuple[str, int
     Returns:
         list: list of (chunk_type, chunk_start, chunk_end).
     Example:
-        >>> from kolibri.metrics.sequence_labeling import get_entities
+        >>> from kdmt.ml.metrics.sequences import get_entities
         >>> seq = ['B-PER', 'I-PER', 'O', 'B-LOC']
         >>> get_entities(seq)
         [('PER', 0, 1), ('LOC', 3, 3)]
@@ -136,7 +176,7 @@ def f1_score(y_true: List[List[str]],
     Returns:
         score : float.
     Example:
-        >>> from kolibri.metrics.sequence_labeling import f1_score
+        >>> from kdmt.ml.metrics.sequences import f1_score
         >>> y_true = [['O', 'O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> y_pred = [['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> f1_score(y_true, y_pred)
@@ -167,7 +207,7 @@ def accuracy_score(y_true: List[List[str]], y_pred: List[List[str]]) -> float:
     Returns:
         score : float.
     Example:
-        >>> from kolibri.metrics.sequence_labeling import accuracy_score
+        >>> from kdmt.ml.metrics.sequences import accuracy_score
         >>> y_true = [['O', 'O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> y_pred = [['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> accuracy_score(y_true, y_pred)
@@ -198,7 +238,7 @@ def precision_score(y_true: List[List[str]],
     Returns:
         score : float.
     Example:
-        >>> from kolibri.metrics.sequence_labeling import precision_score
+        >>> from kdmt.ml.metrics.sequences import precision_score
         >>> y_true = [['O', 'O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> y_pred = [['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> precision_score(y_true, y_pred)
@@ -229,7 +269,7 @@ def recall_score(y_true: List[List[str]],
     Returns:
         score : float.
     Example:
-        >>> from kolibri.metrics.sequence_labeling import recall_score
+        >>> from kdmt.ml.metrics.sequences import recall_score
         >>> y_true = [['O', 'O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> y_pred = [['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> recall_score(y_true, y_pred)
@@ -256,7 +296,7 @@ def performance_measure(y_true: List[List[str]],
     Returns:
         performance_dict : dict
     Example:
-        >>> from kolibri.metrics.sequence_labeling import performance_measure
+        >>> from kdmt.ml.metrics.sequences import performance_measure
         >>> y_true = [['O', 'O', 'O', 'B-MISC', 'I-MISC', 'O', 'B-ORG'], ['B-PER', 'I-PER', 'O']]
         >>> y_pred = [['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'O', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> performance_measure(y_true, y_pred)
@@ -277,7 +317,7 @@ def performance_measure(y_true: List[List[str]],
     return performance_dict
 
 
-def sequence_labeling_report(y_true, y_pred, digits=2, suffix=False, verbose=1):
+def labeling_report(y_true, y_pred, digits=2, suffix=False, verbose=1):
     """Build a text report showing the main classification metrics.
 
     Args:
@@ -290,7 +330,7 @@ def sequence_labeling_report(y_true, y_pred, digits=2, suffix=False, verbose=1):
         report: string. Text summary of the precision, recall, F1 score for each class.
 
     Examples:
-        >>> from kolibri.metrics.sequence_labeling import sequence_labeling_report
+        >>> from kdmt.ml.metrics.sequences import labeling_report
         >>> y_true = [['O', 'O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> y_pred = [['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
         >>> report = sequence_labeling_report(y_true, y_pred)
@@ -379,5 +419,92 @@ def sequence_labeling_report(y_true, y_pred, digits=2, suffix=False, verbose=1):
     return report_dic
 
 
-if __name__ == "__main__":
-    pass
+def classification_report(y_true, y_pred, digits=2, suffix=False):
+    """Build a text report showing the main classification metrics.
+
+    Args:
+        y_true : 2d array. Ground truth (correct) target values.
+        y_pred : 2d array. Estimated targets as returned by a classifier.
+        digits : int. Number of digits for formatting output floating point values.
+
+    Returns:
+        report : string. Text summary of the precision, recall, F1 score for each class.
+
+    Examples:
+        >>> from kdmt.ml.metrics.sequences import classification_report
+        >>> y_true = [['O', 'O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
+        >>> y_pred = [['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'I-MISC', 'O'],
+        >>> ['B-PER', 'I-PER', 'O']]
+        >>> print(classification_report(y_true, y_pred))
+                     precision    recall  f1-score   support
+        <BLANKLINE>
+               MISC       0.00      0.00      0.00         1
+                PER       1.00      1.00      1.00         1
+        <BLANKLINE>
+          micro avg       0.50      0.50      0.50         2
+          macro avg       0.50      0.50      0.50         2
+        <BLANKLINE>
+    """
+    true_entities = set(get_entities(y_true, suffix))
+    pred_entities = set(get_entities(y_pred, suffix))
+
+    name_width = 0
+    d1 = defaultdict(set)
+    d2 = defaultdict(set)
+    for e in true_entities:
+        d1[e[0]].add((e[1], e[2]))
+        name_width = max(name_width, len(e[0]))
+    for e in pred_entities:
+        d2[e[0]].add((e[1], e[2]))
+
+    last_line_heading = "macro avg"
+    width = max(name_width, len(last_line_heading), digits)
+
+    headers = ["precision", "recall", "f1-score", "support"]
+    head_fmt = "{:>{width}s} " + " {:>9}" * len(headers)
+    report = head_fmt.format("", *headers, width=width)
+    report += "\n\n"
+
+    row_fmt = "{:>{width}s} " + " {:>9.{digits}f}" * 3 + " {:>9}\n"
+
+    ps, rs, f1s, s = [], [], [], []
+    for type_name, true_entities in d1.items():
+        pred_entities = d2[type_name]
+        nb_correct = len(true_entities & pred_entities)
+        nb_pred = len(pred_entities)
+        nb_true = len(true_entities)
+
+        p = nb_correct / nb_pred if nb_pred > 0 else 0
+        r = nb_correct / nb_true if nb_true > 0 else 0
+        f1 = 2 * p * r / (p + r) if p + r > 0 else 0
+
+        report += row_fmt.format(*[type_name, p, r, f1, nb_true], width=width, digits=digits)
+
+        ps.append(p)
+        rs.append(r)
+        f1s.append(f1)
+        s.append(nb_true)
+
+    report += "\n"
+
+    # compute averages
+    report += row_fmt.format(
+        "micro avg",
+        precision_score(y_true, y_pred, suffix=suffix),
+        recall_score(y_true, y_pred, suffix=suffix),
+        f1_score(y_true, y_pred, suffix=suffix),
+        np.sum(s),
+        width=width,
+        digits=digits,
+    )
+    report += row_fmt.format(
+        last_line_heading,
+        np.average(ps, weights=s),
+        np.average(rs, weights=s),
+        np.average(f1s, weights=s),
+        np.sum(s),
+        width=width,
+        digits=digits,
+    )
+
+    return report

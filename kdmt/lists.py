@@ -91,7 +91,7 @@ def isiter(obj):
         return True
 
 
-def _can_iterate(obj):
+def can_iterate(obj):
     is_string = isinstance(obj, string_types)
     is_iterable = isinstance(obj, collections.Iterable)
 

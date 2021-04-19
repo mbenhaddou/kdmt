@@ -1,6 +1,7 @@
 import regex as re
+import sys
 import unicodedata
-
+from kdmt.__sentence_splitter import split_simple, split_multi, split_single
 def is_chinese_char(cp):
     """Checks whether CP is the codepoint of a CJK character."""
     # This defines a "chinese character" as anything in the CJK Unicode block:
@@ -99,21 +100,102 @@ def case_sensitive_replace(string, old, new):
     string = regex_p.sub(repl, string)
     return regex.sub(repl, string)
 
+def normalize(inputs, remove_space=True, lower=False):
+    """preprocess data by removing extra space and normalize data."""
+    outputs = inputs
+    if remove_space:
+        outputs = " ".join(inputs.strip().split())
 
-def clean_unicode(text):
+    outputs = unicodedata.normalize("NFKD", outputs)
+    outputs = "".join([c for c in outputs if not unicodedata.combining(c)])
+    if lower:
+        outputs = outputs.lower()
 
-    text = text.replace(u'\\xa333', u' ')
-    text = text.replace(u'\\u2019', u'\'')
-    text = text.replace('\xad', '')
-    text = text.replace('­', '')
-    text = text.replace(u'\\xb4', u'\'')
-    text = text.replace(u'\\xa0', u' ')
-    text = text.replace(u'f\\xfcr', u'\'s')
-    text = text.replace(u'\\xa', u' x')
-    text = text.replace('_x000D_', '')
-    text = text.replace(u'x000D', u'\n')
-    text = text.replace(u'.à', u' a')
-    text = text.replace(u'\ufeff', u'')
-    text = text.replace(u'\u3000',u' ')
+    return outputs
 
-    return text
+
+def clean_text(text):
+    text = str(text)
+    """Performs invalid character removal and whitespace cleanup on text."""
+    output = []
+    for char in text:
+        cp = ord(char)
+        if cp == 0 or cp == 0xfffd or _is_control(char) or char in ['\xad', '­', '_x000D_', u'\ufeff']:
+            continue
+        if is_whitespace(char):
+            output.append(" ")
+        elif char =='：':
+            output.append(': ')
+        elif char == [u'\u200b', u'\\u1427']:
+            continue
+        elif char ==u'\u2026':
+            output.append('...')
+        elif char ==u'’':
+            output.append("'")
+        elif char in [u'\\u2019', u'\\xb4']:
+            output.append("'")
+        elif char ==u'\\u2013':
+            output.append('-')
+        elif char ==u'f\\xfcr':
+            output.append( u'\'s')
+        elif char ==u'\\xa':
+            output.append(u' x')
+        elif char in[u'\\xa0', u'\u3000']:
+            output.append(u' ')
+
+        elif char ==u'\\xa333':
+            output.append(u'  ')
+        elif char ==u'x000D':
+            output.append( u'\n')
+        else:
+            output.append(char)
+
+    return "".join(output)
+
+
+
+def split_tet_to_sentences(text, multi_line=False):
+    """
+     multi_line: Default= False. split `text` at sentence terminals and at newline chars.
+     Option2: multi_line=True Sentences may contain non-consecutive (single) newline chars, while consecutive newline chars
+    ("paragraph separators") always split sentences
+    """
+
+    if multi_line==False:
+        return split_single(text, simple_split=False)
+    else:
+        return list(split_multi(text))
+
+
+
+
+def remove_punctuations(text, split=' ', filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n'):
+    if sys.version_info < (3,):
+        if isinstance(text, unicode):  # noqa: F821
+            translate_map = {
+                ord(c): unicode(split) for c in filters  # noqa: F821
+            }
+            text = text.translate(translate_map)
+        elif len(split) == 1:
+            translate_map = str.maketrans(filters, split * len(filters))
+            text = text.translate(translate_map)
+        else:
+            for c in filters:
+                text = text.replace(c, split)
+    else:
+        translate_dict = {c: split for c in filters}
+        translate_map = str.maketrans(translate_dict)
+        text = text.translate(translate_map)
+    return text.strip()
+
+
+def ngram(text, n=1, stride=None):
+    if stride == None:
+        stride = n
+    return [text[i:i + n] for i in range(0, len(text), stride)]
+
+if __name__=="__main__":
+    test="""His dense and friendly comments have guided many programmers on the linux kernel mailing list. Overview of Visual FoxPro training options We offer practical, hands-on training for programmers 
+    of Microsoft."""
+
+    print(split_tet_to_sentences(test, multi_line=True))

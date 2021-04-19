@@ -1,195 +1,203 @@
-"""
-Plotting functions for classifier models
-"""
-import matplotlib.pyplot as plt
 import numpy as np
-from kdmt.ml.importance import feature_importances
-from kdmt.ml.metrics.plot.matplotlib import bar
-from kdmt.ml.metrics.metrics import confusion_matrix as k_confusion_matrix
-from kdmt.ml.metrics.metrics import precision_at
-from kdmt.lists import is_column_vector, is_row_vector
-from kdmt.ml.metrics.plot.heatmap import default_heatmap
 
+from kdmt.ml.metrics.plot.util import set_default_ax
+from sklearn.metrics import classification_report as sk_classification_report
+from sklearn.metrics import confusion_matrix as sklearn_confusion_matrix
+from sklearn.metrics import precision_score
+from kdmt.lists import isiter
+from kdmt.ml.metrics.plot import binarize
+from kdmt.ml.metrics.plot import validate
 
-def confusion_matrix(y_true, y_pred, target_names=None, normalize=False,
-                     cmap=None, ax=None):
+@set_default_ax
+def metrics_at_thresholds(fn, y_true, y_score, n_thresholds=10, start=0.0,
+                          ax=None):
+    """Plot metrics at increasing thresholds
     """
-    Plot confustion matrix.
+    th, m = compute_at_thresholds(fn, y_true, y_score, n_thresholds,
+                                  start)
 
-    Parameters
-    ----------
-    y_true : array-like, shape = [n_samples]
-        Correct target values (ground truth).
-    y_pred : array-like, shape = [n_samples]
-        Target predicted classes (estimator predictions).
-    target_names : list
-        List containing the names of the target classes. List must be in order
-        e.g. ``['Label for class 0', 'Label for class 1']``. If ``None``,
-        generic labels will be generated e.g. ``['Class 0', 'Class 1']``
-    ax: matplotlib Axes
-        Axes object to draw the plot onto, otherwise uses current Axes
-    normalize : bool
-        Normalize the confusion matrix
-    cmap : matplotlib Colormap
-        If ``None`` uses a modified version of matplotlib's OrRd colormap.
+    ax.plot(th, np.array(m).T, '.--')
+    ax.legend([fn_.__name__ for fn_ in fn])
+    ax.set_xlabel('Threshold')
+    ax.set_ylabel('Metric value')
+    ax.grid()
 
-    Notes
-    -----
-    http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+    return ax
+
+# from collections import OrderedDict
 
 
-    Returns
-    -------
-    ax: matplotlib Axes
-        Axes containing the plot
-
-    Examples
-    --------
-    .. plot:: ../../examples/confusion_matrix.py
-
+def compute_at_thresholds(fn, y_true, y_score, n_thresholds=10, start=0.0):
     """
+    Given scores, binarize them at different thresholds, then compute
+    metrics
+    """
+    if isiter(fn):
+        (thresholds,
+         Y_pred) = binarize.scores_at_thresholds(y_score,
+                                                 n_thresholds=n_thresholds)
+        metrics = [np.array([fn_(y_true, y_pred) for y_pred in Y_pred])
+                   for fn_ in fn]
+        return thresholds, metrics
+    else:
+        (thresholds,
+         Y_pred) = binarize.scores_at_thresholds(y_score,
+                                                 n_thresholds=n_thresholds)
+        metrics = np.array([fn(y_true, y_pred) for y_pred in Y_pred])
+        return thresholds, metrics
 
-    if target_names is None:
-        target_names = set(y_true)
-    cm = k_confusion_matrix(y_true, y_pred, target_names=target_names, normalize=normalize)
+
+def confusion_matrix(y_true, y_pred, target_names, normalize=False):
+    if any((val is None for val in (y_true, y_pred))):
+        raise ValueError("y_true and y_pred are needed to plot confusion "
+                         "matrix")
+
+    # calculate how many names you expect
+    values = set(list(y_true)).union(set(list(y_pred)))
+    expected_len = len(values)
+    if target_names is not None:
+        len_target = len(target_names)
+    if target_names is not None and (expected_len != len_target):
+        raise ValueError(('Data cointains {} different values, but target'
+                          ' names contains {} values.'.format(expected_len,
+                                                              len(target_names)
+                                                              )))
+
+    # if the user didn't pass target_names, create generic ones
+    if target_names is not None:
+        values = list(values)
+        values.sort()
+        target_names = ['Class {}'.format(v) for v in values]
+
+    cm = sklearn_confusion_matrix(y_true, y_pred)
 
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    return cm
 
-    np.set_printoptions(precision=2)
 
-    if ax is None:
-        ax = plt.gca()
+def classification_report(y_true, y_pred, target_names, normalize=False):
+    if any((val is None for val in (y_true, y_pred))):
+        raise ValueError("y_true and y_pred are needed to plot confusion "
+                         "matrix")
 
-    # this (y, x) may sound counterintuitive. The reason is that
-    # in a matrix cell (i, j) is in row=i and col=j, translating that
-    # to an x, y plane (which matplotlib uses to plot), we need to use
-    # i as the y coordinate (how many steps down) and j as the x coordinate
-    # how many steps to the right.
-    for (y, x), v in np.ndenumerate(cm):
-        try:
-            label = '{:.2}'.format(v)
-        except:
-            label = v
-        ax.text(x, y, label, horizontalalignment='center',
-                verticalalignment='center')
+    # calculate how many names you expect
+    values = set(y_true).union(set(y_pred))
+    expected_len = len(values)
+    if target_names is not None:
+        len_target = len(target_names)
+    if target_names is not None and (expected_len != len_target):
+        raise ValueError(('Data cointains {} different values, but target'
+                          ' names contains {} values.'.format(expected_len,
+                                                              len(target_names)
+                                                              )))
 
-    if cmap is None:
-        cmap = default_heatmap()
+    # if the user didn't pass target_names, create generic ones
+    if target_names is None:
+        values = list(values)
+        values.sort()
+        target_names = values
 
-    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.colorbar(im, ax=ax)
-    tick_marks = np.arange(len(target_names))
-    ax.set_xticks(tick_marks)
-    ax.set_xticklabels(target_names)
-    ax.set_yticks(tick_marks)
-    ax.set_yticklabels(target_names)
+    cr = sk_classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
 
-    title = 'Confusion matrix'
+    return cr
+
+
+@validate.argument_is_proportion('top_proportion')
+def precision_at(y_true, y_score, top_proportion, ignore_nas=False):
+    '''
+    Calculates precision at a given proportion.
+    Only supports binary classification.
+    '''
+    # Sort scores in descending order
+    scores_sorted = np.sort(y_score)[::-1]
+
+    # Based on the proportion, get the index to split the data
+    # if value is negative, return 0
+    cutoff_index = max(int(len(y_true) * top_proportion) - 1, 0)
+    # Get the cutoff value
+    cutoff_value = scores_sorted[cutoff_index]
+
+    # Convert scores to binary, by comparing them with the cutoff value
+    scores_binary = np.array([int(y >= cutoff_value) for y in y_score])
+    # Calculate precision using sklearn function
+    if ignore_nas:
+        precision = __precision(y_true, scores_binary)
+    else:
+        precision = precision_score(y_true, scores_binary)
+
+    return precision, cutoff_value
+
+
+def __precision(y_true, y_pred):
+    '''
+        Precision metric tolerant to unlabeled data in y_true,
+        NA values are ignored for the precision calculation
+    '''
+    # make copies of the arrays to avoid modifying the original ones
+    y_true = np.copy(y_true)
+    y_pred = np.copy(y_pred)
+
+    # precision = tp/(tp+fp)
+    # True nehatives do not affect precision value, so for every missing
+    # value in y_true, replace it with 0 and also replace the value
+    # in y_pred with 0
+    is_nan = np.isnan(y_true)
+    y_true[is_nan] = 0
+    y_pred[is_nan] = 0
+    precision = precision_score(y_true, y_pred)
+    return precision
+
+
+@validate.argument_is_proportion('top_proportion')
+def tp_at(y_true, y_score, top_proportion):
+    y_pred = binarize.scores_at_top_proportion(y_score, top_proportion)
+    tp = (y_pred == 1) & (y_true == 1)
+    return tp.sum()
+
+
+@validate.argument_is_proportion('top_proportion')
+def fp_at(y_true, y_score, top_proportion):
+    y_pred = binarize.scores_at_top_proportion(y_score, top_proportion)
+    fp = (y_pred == 1) & (y_true == 0)
+    return fp.sum()
+
+
+@validate.argument_is_proportion('top_proportion')
+def tn_at(y_true, y_score, top_proportion):
+    y_pred = binarize.scores_at_top_proportion(y_score, top_proportion)
+    tn = (y_pred == 0) & (y_true == 0)
+    return tn.sum()
+
+
+@validate.argument_is_proportion('top_proportion')
+def fn_at(y_true, y_score, top_proportion):
+    y_pred = binarize.scores_at_top_proportion(y_score, top_proportion)
+    fn = (y_pred == 0) & (y_true == 1)
+    return fn.sum()
+
+
+@validate.argument_is_proportion('top_proportion')
+def labels_at(y_true, y_score, top_proportion, normalize=False):
+    '''
+        Return the number of labels encountered in the top  X proportion
+    '''
+    # Get indexes of scores sorted in descending order
+    indexes = np.argsort(y_score)[::-1]
+
+    # Sort true values in the same order
+    y_true_sorted = y_true[indexes]
+
+    # Grab top x proportion of true values
+    cutoff_index = max(int(len(y_true_sorted) * top_proportion) - 1, 0)
+    # add one to index to grab values including that index
+    y_true_top = y_true_sorted[:cutoff_index + 1]
+
+    # Count the number of non-nas in the top x proportion
+    # we are returning a count so it should be an int
+    values = int((~np.isnan(y_true_top)).sum())
+
     if normalize:
-        title += ' (normalized)'
-    ax.set_title(title)
+        values = float(values) / (~np.isnan(y_true)).sum()
 
-    ax.set_ylabel('True label')
-    ax.set_xlabel('Predicted label')
-    return ax
-
-
-# Receiver operating characteristic (ROC) with cross validation
-# http://scikit-learn.org/stable/auto_examples/model_selection/plot_roc_crossval.html#example-model-selection-plot-roc-crossval-py
-
-
-# http://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html
-def feature_importances(data, top_n=None, feature_names=None,
-                        orientation='horizontal', ax=None):
-    """
-    Get and order feature importances from a scikit-learn model
-    or from an array-like structure. If data is a scikit-learn model with
-    sub-estimators (e.g. RandomForest, AdaBoost) the function will compute the
-    standard deviation of each feature.
-
-    Parameters
-    ----------
-    data : sklearn model or array-like structure
-        Object to get the data from.
-    top_n : int
-        Only get results for the top_n features.
-    feature_names : array-like
-        Feature names
-    orientation: ('horizontal', 'vertical')
-        Bar plot orientation
-    ax : matplotlib Axes
-        Axes object to draw the plot onto, otherwise uses current Axes
-
-    Returns
-    -------
-    ax: matplotlib Axes
-        Axes containing the plot
-
-    Examples
-    --------
-    .. plot:: ../../examples/feature_importances.py
-
-    """
-    if data is None:
-        raise ValueError('data is needed to plot feature importances. '
-                         'When plotting using the evaluator you need to pass '
-                         'an estimator ')
-
-    # If no feature_names is provided, assign numbers
-    res = feature_importances(data, top_n, feature_names)
-
-    ax = bar.plot(res.importance, orientation, res.feature_name,
-                  error=None if not hasattr(res, 'std_') else res.std_)
-    ax.set_title("Feature importances")
-    return ax
-
-
-def precision_at_proportions(y_true, y_score, ax=None):
-    """
-    Plot precision values at different proportions.
-
-    Parameters
-    ----------
-    y_true : array-like
-        Correct target values (ground truth).
-    y_score : array-like
-        Target scores (estimator predictions).
-    ax : matplotlib Axes
-        Axes object to draw the plot onto, otherwise uses current Axes
-
-    Returns
-    -------
-    ax: matplotlib Axes
-        Axes containing the plot
-
-    """
-    if any((val is None for val in (y_true, y_score))):
-        raise ValueError('y_true and y_score are needed to plot precision at '
-                         'proportions')
-
-    if ax is None:
-        ax = plt.gca()
-
-    y_score_is_vector = is_column_vector(y_score) or is_row_vector(y_score)
-    if not y_score_is_vector:
-        y_score = y_score[:, 1]
-
-    # Calculate points
-    proportions = [0.01 * i for i in range(1, 101)]
-    precs_and_cutoffs = [precision_at(y_true, y_score, p) for p in proportions]
-    precs, cutoffs = zip(*precs_and_cutoffs)
-
-    # Plot and set nice defaults for title and axis labels
-    ax.plot(proportions, precs)
-    ax.set_title('Precision at various proportions')
-    ax.set_ylabel('Precision')
-    ax.set_xlabel('Proportion')
-    ticks = [0.1 * i for i in range(1, 11)]
-    ax.set_xticks(ticks)
-    ax.set_xticklabels(ticks)
-    ax.set_yticks(ticks)
-    ax.set_yticklabels(ticks)
-    ax.set_ylim([0, 1.0])
-    ax.set_xlim([0, 1.0])
-    return ax
+    return values
