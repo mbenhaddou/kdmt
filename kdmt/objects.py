@@ -9,7 +9,8 @@ _get_attr_raise_on_attribute_error = "RAISE ON EXCEPTION"
 
 
 
-
+def isinstance_of_class(obj):
+    return hasattr(obj, '__dict__')
 
 def import_module(dotted_path):
     """
@@ -211,3 +212,5 @@ def class_from_module_path(module_path):
         return getattr(m, class_name)
     else:
         return globals()[module_path]
+
+

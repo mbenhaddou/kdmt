@@ -4,12 +4,12 @@ import pandas as pd
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import f1_score
-from sklearn.metrics import f1_score as classification_f1_score
 from sklearn.metrics import log_loss
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_squared_log_error
 from sklearn.metrics import r2_score
 from sklearn.metrics import roc_auc_score
+from sklearn.metrics import recall_score, precision_score
 
 
 def logloss(y_true, y_predicted, sample_weight=None):
@@ -103,7 +103,7 @@ def acc_and_f1(preds, labels):
     """return accuracy and f1 score
     """
     acc = simple_accuracy(preds, labels)
-    f1 = classification_f1_score(y_true=labels, y_pred=preds)
+    f1 = f1_score(y_true=labels, y_pred=preds)
     return {
         "acc": acc,
         "f1": f1,
