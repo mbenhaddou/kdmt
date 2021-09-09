@@ -1,6 +1,22 @@
 """Useful things to do with dates"""
 import datetime
 
+from dateutil.parser import parse
+
+def is_date(string, fuzzy=False):
+    """
+    Return whether the string can be interpreted as a date.
+
+    :param string: str, string to check for date
+    :param fuzzy: bool, ignore unknown tokens in string if True
+    """
+    try:
+        parse(string, fuzzy=fuzzy)
+        return True
+
+    except ValueError:
+        return False
+
 
 def date_from_string(string, format_string=None):
     """Runs through a few common string formats for datetimes,
@@ -23,7 +39,7 @@ def date_from_string(string, format_string=None):
         try:
             return datetime.datetime.strptime(string, format).date()
         except ValueError:
-            continue
+            parse(string)
 
     raise ValueError("Could not produce date from string: {}".format(string))
 

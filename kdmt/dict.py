@@ -1,5 +1,5 @@
 import collections.abc
-from copy import copy
+from copy import copy, deepcopy
 
 def nested_dict_get_values(key, dictionary):
     if hasattr(dictionary, 'items'):
@@ -139,6 +139,7 @@ def nested_dict_get_value(key, dictionary):
                         return val
 
 def update(origin, new):
+    new=deepcopy(new)
     for k, v in new.items():
         if isinstance(v, collections.abc.Mapping):
             origin[k] = update(origin.get(k, {}), v)

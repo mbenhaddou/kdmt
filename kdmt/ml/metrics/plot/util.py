@@ -1,4 +1,9 @@
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+    has_matplotlib=True
+except:
+    has_matplotlib=False
+
 from decorator import decorator
 from kdmt.objects import map_parameters_in_fn_call
 import inspect
@@ -11,6 +16,8 @@ from kdmt.lists import can_iterate
 
 @decorator
 def set_default_ax(func, *args, **kwargs):
+    if not has_matplotlib:
+        raise Exception('The library matplotlib is not installed.')
     params = map_parameters_in_fn_call(args, kwargs, func)
 
     if 'ax' not in params:

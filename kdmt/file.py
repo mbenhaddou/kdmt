@@ -13,7 +13,7 @@ import urllib.parse
 import zipfile
 import simplejson
 import hashlib
-
+import shutil
 
 
 def filename_from_url(url):
@@ -319,6 +319,8 @@ def extract_archive(from_path, to_path=None, overwrite=False, logger=None):
             files = []
             for file_ in tar:
                 file_path = os.path.join(to_path, file_.name)
+                if '/._' in file_path:
+                    continue
                 if file_.isfile():
                     files.append(file_path)
                     if os.path.exists(file_path):

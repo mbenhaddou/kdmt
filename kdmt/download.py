@@ -2,7 +2,8 @@ import requests
 from progressbar import UnknownLength
 from kdmt.progress import progress_bar
 from kdmt.file import ensure_directory_exists, filename_from_url, validate_file_hash
-import os, re, tqdm
+import os, re
+from tqdm import tqdm
 
 def download(url, file_handle, chunk_size=1024):
     """Downloads a given URL to a specific file.

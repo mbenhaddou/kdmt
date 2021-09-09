@@ -209,3 +209,59 @@ def unwords(words):
     Join a list of words into a single string with separating spaces.
     """
     return join(words, ' ')
+
+
+def longestSubstring(string1, string2):
+    answer = ""
+    len1, len2 = len(string1), len(string2)
+    for i in range(len1-1,0,-1):
+        match = ""
+        for j in range(len2):
+            if (i + j < len1 and string1[i + j] == string2[j]):
+                match += string2[j]
+            else:
+                if (len(match) > len(answer)): answer = match
+                match = ""
+    return answer
+
+
+import re
+
+
+def commonOverlapIndexOf(text1, text2):
+    # Cache the text lengths to prevent multiple calls.
+    text1_length = len(text1)
+    text2_length = len(text2)
+    # Eliminate the null case.
+    if text1_length == 0 or text2_length == 0:
+        return 0
+        # Truncate the longer string.
+    if text1_length > text2_length:
+        text1 = text1[-text2_length:]
+    elif text1_length < text2_length:
+        text2 = text2[:text1_length]
+        # Quick check for the worst case.
+    if text1 == text2:
+        return min(text1_length, text2_length)
+
+        # Start by looking for a single character match
+    # and increase length until no match is found.
+    best = 0
+    length = 1
+    while True:
+        pattern = text1[-length:]
+        found = text2.find(pattern)
+        if found == -1:
+            return best
+        length += found
+        if text1[-length:] == text2[:length]:
+            best = length
+            length += 1
+        # Printing index values of non-overlapping patter
+
+if __name__=="__main__":
+    str1="Credit marke"
+    str2="rket Corp"
+    common=commonOverlapIndexOf(str1, str2)
+    print(str1+str2[common:])
+ #   print(str1[:str1.find(common)]+common+str2[len(common):])
