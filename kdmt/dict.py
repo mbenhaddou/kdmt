@@ -1,6 +1,6 @@
 import collections.abc
 from copy import copy, deepcopy
-
+from kdmt.infer import is_list_of_one_element, is_dict_of_one_element
 def nested_dict_get_values(key, dictionary):
     if hasattr(dictionary, 'items'):
         for k, v in dictionary.items():
@@ -150,6 +150,33 @@ def update(origin, new):
 
 def get_keys_for_value(dictionary, value):
     return [key for key,val in dictionary.items() if val == value]
+
+
+def format_dict(_dict, tidy=True):
+    """
+    This function format a dict. If the main dict or a deep dict has only on element
+     {"col_name":{0.5: 200}} we get 200
+    :param _dict: dict to be formatted
+    :param tidy:
+    :return:
+    """
+
+    if tidy is True:
+        levels = 2
+        while (levels >= 0):
+            levels -= 1
+            if is_list_of_one_element(_dict):
+                _dict = _dict[0]
+            elif is_dict_of_one_element(_dict):
+                _dict = next(iter(_dict.values()))
+            else:
+                return _dict
+
+    else:
+        if is_list_of_one_element(_dict):
+            return _dict[0]
+        else:
+            return _dict
 
 
 if __name__=="__main__":

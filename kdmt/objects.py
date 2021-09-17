@@ -206,10 +206,13 @@ def class_from_module_path(module_path):
     # load the module, will raise ImportError if module cannot be loaded
     if "." in module_path:
         module_name, _, class_name = module_path.rpartition('.')
-
-        m = importlib.import_module(module_name)
-        # get the class, will raise AttributeError if class cannot be found
-        return getattr(m, class_name)
+        try:
+            m = importlib.import_module(module_name)
+            # get the class, will raise AttributeError if class cannot be found
+            return getattr(m, class_name)
+        except:
+            print('The module: '+module_path+ "could not be found. Please install any missing libraries")
+            return None
     else:
         return globals()[module_path]
 
