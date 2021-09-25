@@ -154,7 +154,7 @@ def clean_text(text):
 
 
 
-def split_tet_to_sentences(text, multi_line=False):
+def split_text_to_sentences(text, multi_line=False):
     """
      multi_line: Default= False. split `text` at sentence terminals and at newline chars.
      Option2: multi_line=True Sentences may contain non-consecutive (single) newline chars, while consecutive newline chars
@@ -198,4 +198,4 @@ if __name__=="__main__":
     test="""His dense and friendly comments have guided many programmers on the linux kernel mailing list. Overview of Visual FoxPro training options We offer practical, hands-on training for programmers 
     of Microsoft."""
 
-    print(split_tet_to_sentences(test, multi_line=True))
+    print(split_text_to_sentences(test, multi_line=True))

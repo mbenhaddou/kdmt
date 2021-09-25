@@ -1,5 +1,6 @@
 import collections.abc
 from copy import copy, deepcopy
+
 from kdmt.infer import is_list_of_one_element, is_dict_of_one_element
 def nested_dict_get_values(key, dictionary):
     if hasattr(dictionary, 'items'):

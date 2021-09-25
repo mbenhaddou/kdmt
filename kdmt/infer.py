@@ -2,11 +2,20 @@ import datetime
 import math
 import os
 import re
+from kdmt.lib import install_and_import
 from ast import literal_eval
 from kdmt.dates import date_from_string
-import fastnumbers
+
 import pandas as pd
-import pydateinfer
+try:
+    import pydateinfer
+except:
+    install_and_import('dateinfer', 'py-dateinfer')
+
+try:
+    import fastnumbers
+except:
+    install_and_import('fastnumbers')
 
 
 def is_datetime_str(_value: str):

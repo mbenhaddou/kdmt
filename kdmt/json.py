@@ -1,5 +1,11 @@
 import datetime
-import numpy as np
+import kdmt
+import kdmt.lib
+
+try:
+    import numpy as np
+except:
+    kdmt.lib.install_and_import('numpy')
 import pandas as pd
 
 def json_converter(obj):

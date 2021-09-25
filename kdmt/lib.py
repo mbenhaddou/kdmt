@@ -1,6 +1,7 @@
-import importlib
+import subprocess
 import types
-
+import importlib
+import sys
 
 class LazyLoader(types.ModuleType):
     """
@@ -44,3 +45,17 @@ class LazyLoader(types.ModuleType):
     def __dir__(self):
         module = self._load()
         return dir(module)
+
+
+def install_and_import(imported, package=None ):
+    import importlib
+    if package is None:
+        package=imported
+    try:
+        importlib.import_module(package)
+    except ImportError:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+    finally:
+        globals()[package] = importlib.import_module(imported)
+

@@ -8,10 +8,17 @@ import io
 import tarfile
 import six, sys, csv
 import re
-import requests
+from kdmt.lib import install_and_import
+try:
+    import requests
+except:
+    install_and_import('requests')
 import urllib.parse
 import zipfile
-import simplejson
+try:
+    import simplejson
+except:
+    install_and_import('simplejson')
 import hashlib
 import shutil
 
@@ -441,3 +448,6 @@ def validate_file_hash(file_obj, hash_value, hash_type="sha256"):
             break
         hash_func.update(chunk)
     return hash_func.hexdigest() == hash_value
+
+
+

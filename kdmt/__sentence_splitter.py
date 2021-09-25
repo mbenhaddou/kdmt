@@ -39,9 +39,11 @@ HYPHENS = '\u00AD\u058A\u05BE\u0F0C\u1400\u1806\u2010-\u2012\u2e17\u30A0-'
 # (such as "etc.")
 ABBREVIATIONS = """
 approx Capt cf Col Dr f\.?e figs? Gen e\.?g i\.?e i\.?v
-GovMag med Mr Mrs Mt nat No nr p\.e phil prof rer mgr
+GovMag med Mr Mrs Mt nat No nr p\.e phil prof rer mgr M
 sci Sgt Sr Sra Srta St univ vol vs z\.B
 Jän Jan Ene Feb Mär Mar Apr Abr May Jun Jul Aug Sep Sept Oct Okt Nov Dic Dez Dec
+ref réf no GSM Gsm
+jan feb mar apr mai jun jul aug sep oct nov dec fev déc mon tue wed thu fri sat sun lun mar mer jeu ven sam dim
 E\.U U\.K U\.S
 """.split()
 ABBREVIATIONS.extend(a.capitalize() for a in ABBREVIATIONS if a[0].islower())
