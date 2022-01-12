@@ -23,6 +23,41 @@ import hashlib
 import shutil
 
 
+
+
+def list_directory(path):
+    # type: (Text) -> List[Text]
+    """Returns all files and folders excluding hidden files.
+
+    If the path points to a file, returns the file. This is a recursive
+    implementation returning files in any depth of the path."""
+
+    if not isinstance(path, six.string_types):
+        raise ValueError("Resourcename must be a string type")
+
+    if os.path.isfile(path):
+        return [path]
+    elif os.path.isdir(path):
+        results = []
+        for base, dirs, files in os.walk(path):
+            # remove hidden files
+            goodfiles = filter(lambda x: not x.startswith('.'), files)
+            results.extend(os.path.join(base, f) for f in goodfiles)
+        return results
+    else:
+        raise ValueError("Could not locate the resource '{}'."
+                         "".format(os.path.abspath(path)))
+
+
+def list_files(path):
+    # type: (Text) -> List[Text]
+    """Returns all files excluding hidden files.
+
+    If the path points to a file, returns the file."""
+
+    return [fn for fn in list_directory(path) if os.path.isfile(fn)]
+
+
 def filename_from_url(url):
     """Parses a URL to determine a file name.
 

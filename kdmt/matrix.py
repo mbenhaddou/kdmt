@@ -1,3 +1,6 @@
+import time
+import timeit
+
 import numpy as np
 from kdmt import distances
 def has_duplicate_col(matrix):
@@ -58,6 +61,35 @@ def get_closet_vector(vector, matrix, distance="euclidean", weights=None):
     return index
 
 
+def euclidean_distance(X, Y):
+    """Efficiently calculates the euclidean distance
+    between two vectors using Numpys einsum function.
+
+    Parameters
+    ----------
+    X : array, (n_samples x d_dimensions)
+    Y : array, (m_samples x d_dimensions)
+
+    Returns
+    -------
+    D : array, (n_samples, n_samples)
+    """
+    XX = np.einsum('ij,ij->i', X, X)[:, np.newaxis]
+    YY = np.einsum('ij,ij->i', Y, Y)
+
+
+    D_squared=XX + YY - 2 * np.dot(X, Y.T)
+    zero_mask = np.less(D_squared, 0.0)
+    D_squared[zero_mask] = 0.0
+    return np.sqrt(D_squared)
+
+
+
 if __name__=='__main__':
-    mat = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    print(get_closet_vector([4, 4, 6], mat))
+    R=np.random.rand(1000, 1000)
+    B = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    A=np.array([[1, 1, 3]])
+
+    stat=time.time()
+    print(euclidean_distance(R, R))
+    print(time.time()-stat)

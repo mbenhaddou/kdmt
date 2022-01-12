@@ -180,7 +180,7 @@ def fn_at(y_true, y_score, top_proportion):
 @validate.argument_is_proportion('top_proportion')
 def labels_at(y_true, y_score, top_proportion, normalize=False):
     '''
-        Return the number of labels encountered in the top  X proportion
+        Return the number of labels encountered in the top  Y proportion
     '''
     # Get indexes of scores sorted in descending order
     indexes = np.argsort(y_score)[::-1]

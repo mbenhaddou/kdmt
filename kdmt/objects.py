@@ -4,9 +4,9 @@ import numpy as np
 import numbers
 from copy import copy
 import inspect
+import pydoc
 from inspect import signature
 _get_attr_raise_on_attribute_error = "RAISE ON EXCEPTION"
-
 
 
 def isinstance_of_class(obj):
@@ -40,7 +40,6 @@ def initialize_class(data, *args, **kwargs):
 
         return Class(*args, **kwargs)
 
-
 def ordered(obj):
     if isinstance(obj, dict):
         return sorted((k, ordered(v)) for k, v in obj.items())
@@ -48,7 +47,6 @@ def ordered(obj):
         return sorted(ordered(x) for x in obj)
     else:
         return obj
-
 
 def module_path_from_object(o):
     """Returns the fully qualified class path of the instantiated object."""
@@ -89,6 +87,10 @@ def import_or_install(package):
     except ImportError:
         print('package '+package+' is not installed. Installing...')
         pip.main(['install', package])
+        try:
+            __import__(package)
+        except:
+            print('package ' + package + ' installation failed.')
 
 def get_attr(obj, string_rep, default=_get_attr_raise_on_attribute_error, separator="."):
     """ getattr via a chain of attributes like so:
@@ -112,7 +114,6 @@ def get_attr(obj, string_rep, default=_get_attr_raise_on_attribute_error, separa
             return default
 
     return current_obj
-
 
 class ImmutableWrapper(object):
     _obj = None
@@ -140,7 +141,6 @@ class ImmutableWrapper(object):
 
     def __repr__(self):
         return "<Immutable {}: {}>".format(self._obj.__class__.__name__, self._obj.__repr__())
-
 
 def immutable(obj, recursive=True):
     """wraps the argument in a pass-through class that disallows all attribute
@@ -216,4 +216,19 @@ def class_from_module_path(module_path):
     else:
         return globals()[module_path]
 
+def load_data_object(data, **kwargs):
+    """
+    Load Object From Dict
+    Args:
+        data:
+        **kwargs:
 
+    Returns:
+
+    """
+    module_name = f"{data['__module__']}.{data['__class_name__']}"
+    obj = pydoc.locate(module_name)(**data['config'], **kwargs)
+    if hasattr(obj, '_override_load_model'):
+        obj._override_load_model(data)
+
+    return obj

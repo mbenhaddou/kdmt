@@ -172,7 +172,8 @@ SEGMENTER_REGEX = r"""
     \s+                 # a sequence of required spaces.
 |                       # Otherwise,
     \n{{{},}}           # a sentence also terminates at [consecutive] newlines.
-)""" % SENTENCE_TERMINALS
+| (?<=[a-z][a-z][a-z])[%s](?=[A-Z][a-z][a-z])
+)""" % (SENTENCE_TERMINALS,SENTENCE_TERMINALS)
 """
 Sentence end a sentence terminal, followed by spaces.
 Optionally, a right quote and any number of closing brackets may succeed the terminal marker.
@@ -190,7 +191,7 @@ MAY_CROSS_ONE_LINE = _compile(2)
 "A segmentation patterns where two or more newline chars also terminate sentences."
 
 SIMPLE_REGEX2 = re.compile(
-    r'([.?!][\'\"\u2018\u2019\u201c\u201d\)\]]*\s*(?<!\w\.\w.)(?<![A-Z][a-z][a-z]\.)(?<![A-Z][a-z]\.)(?<![A-Z]\.)\s+)')
+    r'([.?!][\'\"\u2018\u2019\u201c\u201d\)\]]*\s*(?<!\w\.\w.)(?<![A-Z][a-z][a-z]\.)(?<![A-Z][a-z]\.)(?=[A-Z][a-z][a-z]))')
 
 
 def split_single(text, simple_split=True, join_on_lowercase=False, short_sentence_length=SHORT_SENTENCE_LENGTH):
@@ -218,14 +219,14 @@ def split_simple(text):
     if text is None:
         return None
 
-    sentences_ = SIMPLE_REGEX2.split(text)
+    sentences_ = [ s for s in SIMPLE_REGEX2.split(text) if s is not None]
     sentences = []
     if len(sentences_) == 1:
         return sentences_
 
     for j in range(0, len(sentences_), 2):
         if j + 1 < len(sentences_):
-            sentences.append(sentences_[j] + sentences_[j + 1])
+            sentences.append(sentences_[j]+ sentences_[j + 1])
         else:
             sentences.append(sentences_[j])
 

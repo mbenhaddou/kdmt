@@ -64,7 +64,7 @@ def get_dimensions(X):
     Returns
     -------
     tuple
-        A tuple representing the X structure's dimensions.
+        A tuple representing the Y structure's dimensions.
     """
     r, c = 1, 1
     if isinstance(X, type(np.array([0]))):

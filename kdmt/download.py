@@ -77,7 +77,6 @@ def default_downloader(directory, urls, filenames, url_prefix=None,
                 download(url, file_handle)
 
 
-
 def download_from_url(url, path=None, root='.data', overwrite=False, hash_value=None,
                       hash_type="sha256", logger=None):
     """Download file, with logic (from tensor2tensor) for Google Drive. Returns
