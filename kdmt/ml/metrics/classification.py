@@ -24,8 +24,6 @@ def metrics_at_thresholds(fn, y_true, y_score, n_thresholds=10, start=0.0,
 
     return ax
 
-# from collections import OrderedDict
-
 
 def compute_at_thresholds(fn, y_true, y_score, n_thresholds=10, start=0.0):
     """

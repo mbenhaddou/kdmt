@@ -1,5 +1,6 @@
 import collections.abc
 from copy import copy, deepcopy
+import itertools
 
 from kdmt.infer import is_list_of_one_element, is_dict_of_one_element
 def nested_dict_get_values(key, dictionary):
@@ -207,3 +208,11 @@ if __name__=="__main__":
     print(nested_dict_set_key_value(['k3', 0, 'k31', 'k332'], new, 'new_V32'))
 
  #   nested_dict_set_key_value(r, new, 'bla')
+
+
+
+def zip_dict(*dicts):
+  """Iterate over items of dictionaries grouped by their keys."""
+  for key in set(itertools.chain(*dicts)):  # set merge all keys
+    # Will raise KeyError if the dict don't have the same keys
+    yield key, tuple(d[key] for d in dicts)

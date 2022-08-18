@@ -3,6 +3,13 @@ import os, re
 
 
 
+def str_to_unicode(text, encoding=None, errors="strict"):
+    if encoding is None:
+        encoding = "utf-8"
+    if isinstance(text, bytes):
+        return text.decode(encoding, errors)
+    return text
+
 def __sub_patterns(patterns, text):
     """
     Apply re.sub to bunch of (pattern, repl)

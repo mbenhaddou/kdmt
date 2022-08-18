@@ -12,11 +12,6 @@ try:
 except:
     install_and_import('dateinfer', 'py-dateinfer')
 
-try:
-    import fastnumbers
-except:
-    install_and_import('fastnumbers')
-
 
 def is_datetime_str(_value: str):
     try:
@@ -192,11 +187,11 @@ def str_to(value, regex, compiled_regex, compile=False):
 
 
 def str_to_int(_value):
-    return True if fastnumbers.isint(_value) else False
+    return True if isinstance(_value, int) else False
 
 
 def str_to_decimal(_value):
-    return True if fastnumbers.isfloat(_value) else False
+    return True if isinstance(_value, float) else False
 
 
 def str_to_str(_value):
@@ -566,7 +561,7 @@ def is_numeric_like(value):
     :param value:
     :return:
     """
-    return fastnumbers.isfloat(value) or fastnumbers.isintlike(value)
+    return isinstance(value, float) or isinstance(value, int)
 
 
 def is_str(value):
@@ -590,7 +585,7 @@ def is_object_value(value):
 
 
 def is_decimal(value):
-    return fastnumbers.isfloat(value, allow_nan=True)
+    return isinstance(value, float)
 
 
 def is_int(value):
@@ -608,7 +603,7 @@ def is_int_like(value):
     :param value:
     :return:
     """
-    return fastnumbers.isintlike(value)
+    return isinstance(value, int)
 
 
 def is_url(value):

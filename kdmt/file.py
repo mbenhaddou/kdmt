@@ -242,7 +242,7 @@ def open_gziped(filename, mode='r', encoding=None):
     https://docs.python.org/3/library/codecs.html#standard-encodings
 
     """
-    if filename.endswith('.gz'):
+    if filename.endswith('.gz') or filename.endswith('.tgz'):
         if six.PY2:
             zf = io.BufferedReader(gzip.open(filename, mode))
             if encoding:
@@ -485,4 +485,19 @@ def validate_file_hash(file_obj, hash_value, hash_type="sha256"):
     return hash_func.hexdigest() == hash_value
 
 
+def gz_extract(directory, delete=False):
+    extension = ".gz"
+    os.chdir(directory)
+    for item in os.listdir(directory): # loop through items in dir
+      if item.endswith(extension): # check for ".gz" extension
+          gz_name = os.path.abspath(item) # get full path of files
+          file_name = (os.path.basename(gz_name)).rsplit('.',1)[0] #get file name for file within
+          with gzip.open(gz_name,"rb") as f_in, open(file_name,"wb") as f_out:
+              shutil.copyfileobj(f_in, f_out)
+          if delete:
+            os.remove(gz_name) # delete zipped file
 
+
+
+
+#gz_extract("/Users/mohamedmentis/Dropbox/Mac (2)/Documents/Mentis/Development/Python/Deep_kolibri/demos/current.tgz")

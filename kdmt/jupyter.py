@@ -1,4 +1,7 @@
-from IPython import get_ipython
+try:
+    from IPython import get_ipython
+except:
+    pass
 
 def isnotebook():
     try:

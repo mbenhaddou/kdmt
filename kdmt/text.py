@@ -1,7 +1,12 @@
 import regex as re
 import sys
+from kdmt.__sentence_splitter import split_multi, split_single
+
 import unicodedata
-from kdmt.__sentence_splitter import split_simple, split_multi, split_single
+
+def remove_control_characters(s):
+    return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
+
 def is_chinese_char(cp):
     """Checks whether CP is the codepoint of a CJK character."""
     # This defines a "chinese character" as anything in the CJK Unicode block:
@@ -120,7 +125,7 @@ def clean_text(text):
     output = []
     for char in text:
         cp = ord(char)
-        if cp == 0 or cp == 0xfffd or _is_control(char) or char in ['\xad', '­', '_x000D_', u'\ufeff']:
+        if cp == 0 or cp == 0xfffd or unicodedata.category(char)[0]=="C" or char in ['\xad', '­', '_x000D_', u'\ufeff']:
             continue
         if is_whitespace(char):
             output.append(" ")

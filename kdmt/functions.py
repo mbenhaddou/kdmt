@@ -3,7 +3,6 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
-from fastnumbers import fast_float, fast_int
 
 from kdmt.lists import one_tuple_to_val, val_to_list
 from kdmt.infer import  is_list, is_list_of_list, is_list_of_int, is_list_of_str

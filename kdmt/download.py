@@ -3,6 +3,7 @@ from progressbar import UnknownLength
 from kdmt.progress import progress_bar
 from kdmt.file import ensure_directory_exists, filename_from_url, validate_file_hash
 import os, re
+
 from tqdm import tqdm
 
 def download(url, file_handle, chunk_size=1024):
@@ -77,7 +78,7 @@ def default_downloader(directory, urls, filenames, url_prefix=None,
                 download(url, file_handle)
 
 
-def download_from_url(url, path=None, root='.data', overwrite=False, hash_value=None,
+def download_from_url(url, path=None, overwrite=False, hash_value=None,
                       hash_type="sha256", logger=None):
     """Download file, with logic (from tensor2tensor) for Google Drive. Returns
     the path to the downloaded file.
@@ -90,6 +91,7 @@ def download_from_url(url, path=None, root='.data', overwrite=False, hash_value=
         hash_type (str, optional): hash type, among "sha256" and "md5" (Default: ``"sha256"``).
 
     Examples:
+        >>> import kdmt
         >>> url = 'http://www.quest.dcs.shef.ac.uk/wmt16_files_mmt/validation.tar.gz'
         >>> kdmt.download.download_from_url(url)
         >>> url = 'http://www.quest.dcs.shef.ac.uk/wmt16_files_mmt/validation.tar.gz'
@@ -99,7 +101,7 @@ def download_from_url(url, path=None, root='.data', overwrite=False, hash_value=
     """
     if path is not None:
         path = os.path.abspath(path)
-    root = os.path.abspath(root)
+
 
     def _check_hash(path):
         if hash_value:
@@ -149,15 +151,6 @@ def download_from_url(url, path=None, root='.data', overwrite=False, hash_value=
     else:
         root, filename = os.path.split(os.path.abspath(path))
 
-    if not os.path.exists(root):
-        try:
-            os.makedirs(root)
-        except OSError:
-            print("Can't create the download directory {}.".format(root))
-            raise
-
-    if filename is not None:
-        path = os.path.join(root, filename)
     # skip requests.get if path exists and not overwrite.
     if os.path.exists(path):
         if logger:
