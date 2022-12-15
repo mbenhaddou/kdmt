@@ -1,11 +1,15 @@
 import re
 from abc import ABC
-
+import inspect
 import numpy as np
 import pandas as pd
-
+from typing import Callable, Set
 from kdmt.lists import one_tuple_to_val, val_to_list
 from kdmt.infer import  is_list, is_list_of_list, is_list_of_int, is_list_of_str
+
+def get_function_params(function: Callable) -> Set[str]:
+    return inspect.signature(function).parameters
+
 
 
 class MiscFunctions(ABC):

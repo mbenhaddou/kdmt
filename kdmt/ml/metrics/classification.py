@@ -1,14 +1,11 @@
 import numpy as np
 
-from kdmt.ml.metrics.plot.util import set_default_ax
 from sklearn.metrics import classification_report as sk_classification_report
 from sklearn.metrics import confusion_matrix as sklearn_confusion_matrix
 from sklearn.metrics import precision_score
 from kdmt.lists import isiter
-from kdmt.ml.metrics.plot import binarize
-from kdmt.ml.metrics.plot import validate
 
-@set_default_ax
+
 def metrics_at_thresholds(fn, y_true, y_score, n_thresholds=10, start=0.0,
                           ax=None):
     """Plot metrics at increasing thresholds

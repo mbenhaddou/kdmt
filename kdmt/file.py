@@ -7,7 +7,8 @@ import gzip
 import io
 import tarfile
 import six, sys, csv
-import re
+import re, tempfile
+import numpy as np
 from kdmt.lib import install_and_import
 try:
     import requests
@@ -91,6 +92,81 @@ def read_json_file(filename, encoding="utf-8"):
         raise ValueError("Failed to read json from '{}'. Error: "
                          "{}".format(os.path.abspath(filename), e))
 
+def create_temporary_file(data, suffix="", mode="w+"):
+    """Creates a tempfile.NamedTemporaryFile object for data.
+
+    mode defines NamedTemporaryFile's  mode parameter in py3."""
+
+    f = tempfile.NamedTemporaryFile(mode=mode, suffix=suffix,
+                                    delete=False)
+    f.write(data)
+
+    f.close()
+    return f.name
+
+def jsonify_data(data):
+    """Replaces JSON-non-serializable objects with JSON-serializable.
+
+    Function replaces numpy arrays and numbers with python lists and numbers, tuples is replaces with lists. All other
+    object types remain the same.
+
+    Args:
+        data: Object to make JSON-serializable.
+
+    Returns:
+        Modified input data.
+
+    """
+    if isinstance(data, (list, tuple)):
+        result = [jsonify_data(item) for item in data]
+    elif isinstance(data, dict):
+        result = {}
+        for key in data.keys():
+            result[key] = jsonify_data(data[key])
+    elif isinstance(data, np.ndarray):
+        result = data.tolist()
+    elif isinstance(data, np.integer):
+        result = int(data)
+    elif isinstance(data, np.floating):
+        result = float(data)
+    elif callable(getattr(data, "to_serializable_dict", None)):
+        result = data.to_serializable_dict()
+    else:
+        result = data
+    return result
+
+
+
+
+def get_all_elems_from_json(search_json: dict, search_key: str) -> list:
+    """Returns values by key in all nested dicts.
+
+    Args:
+        search_json: Dictionary in which one needs to find all values by specific key.
+        search_key: Key for search.
+
+    Returns:
+        List of values stored in nested structures by ``search_key``.
+
+    Examples:
+        >>> get_all_elems_from_json({'a':{'b': [1,2,3]}, 'b':42}, 'b')
+        [[1, 2, 3], 42]
+
+    """
+    result = []
+    if isinstance(search_json, dict):
+        for key in search_json:
+            if key == search_key:
+                result.append(search_json[key])
+            else:
+                result.extend(get_all_elems_from_json(search_json[key], search_key))
+    elif isinstance(search_json, list):
+        for item in search_json:
+            result.extend(get_all_elems_from_json(item, search_key))
+
+    return result
+
+
 def create_dir(folder_name, force_perm=None):
     """Create the specified folder.
 
@@ -164,6 +240,73 @@ def load_from_disk(path_to_disk):
 
     return pickle.load(open(path_to_disk, 'rb'))
 
+def binary_search_file(file, key, cache={}, cacheDepth=-1):
+    """
+    Return the line from the file with first word key.
+    Searches through a sorted file using the binary search algorithm.
+    :type file: file
+    :param file: the file to be searched through.
+    :type key: str
+    :param key: the identifier we are searching for.
+    """
+
+    key = key + ' '
+    keylen = len(key)
+    start = 0
+    currentDepth = 0
+
+    if hasattr(file, 'name'):
+        end = os.stat(file.name).st_size - 1
+    else:
+        file.seek(0, 2)
+        end = file.tell() - 1
+        file.seek(0)
+
+    while start < end:
+        lastState = start, end
+        middle = (start + end) // 2
+
+        if cache.get(middle):
+            offset, line = cache[middle]
+
+        else:
+            line = ""
+            while True:
+                file.seek(max(0, middle - 1))
+                if middle > 0:
+                    file.discard_line()
+                offset = file.tell()
+                line = file.readline()
+                if line != "":
+                    break
+                # at EOF; try to find start of the last line
+                middle = (start + middle) // 2
+                if middle == end - 1:
+                    return None
+            if currentDepth < cacheDepth:
+                cache[middle] = (offset, line)
+
+        if offset > end:
+            assert end != middle - 1, "infinite loop"
+            end = middle - 1
+        elif line[:keylen] == key:
+            return line
+        elif line > key:
+            assert end != middle - 1, "infinite loop"
+            end = middle - 1
+        elif line < key:
+            start = offset + len(line) - 1
+
+        currentDepth += 1
+        thisState = start, end
+
+        if lastState == thisState:
+            # Detects the condition where we're searching past the end
+            # of the file, which is otherwise difficult to detect
+            return None
+
+    return None
+
 
 def read_yaml_string(string):
     import ruamel.yaml
@@ -174,6 +317,12 @@ def read_yaml_string(string):
 
     return yaml_parser.load(string)
 
+
+def read_yaml(fpath):
+    from ruamel.yaml import YAML
+    yaml = YAML(typ="safe")
+    with open(fpath, encoding='utf8') as fin:
+        return yaml.load(fin)
 
 def _dump_yaml(obj, output):
     import ruamel.yaml

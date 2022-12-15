@@ -13,7 +13,7 @@ setup(
     author_email='haddomoh@gmail.com',
     url='https://github.com/mbenhaddou/pyutilities',
     packages=find_packages(exclude=["*.tests"]),
-    install_requires=["pandas", "scikit-learn", "numpy", "requests", "decorator", "urlparser", "tqdm", "progressbar", "regex", "matplotlib", "etils", "importlib-resources", "azure-storage-blob"],
+    install_requires=["pandas", "scikit-learn", "numpy", "requests", "decorator", "urlparser", "tqdm", "progressbar", "regex", "matplotlib", "importlib-resources","importlib-metadata", "azure-storage-blob", "importlib-metadata"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
@@ -21,5 +21,4 @@ setup(
         "Topic :: Software Development :: Libraries",
     ],
     python_requires=">=3.6",
-
 )

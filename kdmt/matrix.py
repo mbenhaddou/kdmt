@@ -84,12 +84,17 @@ def euclidean_distance(X, Y):
     return np.sqrt(D_squared)
 
 
+def split(array, nrows, ncols):
+    """Split a matrix into sub-matrices."""
+
+    r, h = array.shape
+    return (array.reshape(h//nrows, nrows, -1, ncols)
+                 .swapaxes(1, 2)
+                 .reshape(-1, nrows, ncols))
 
 if __name__=='__main__':
-    R=np.random.rand(1000, 1000)
-    B = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    A=np.array([[1, 1, 3]])
+    R=np.random.rand(20, 20)
 
-    stat=time.time()
-    print(euclidean_distance(R, R))
-    print(time.time()-stat)
+    matrices=split(R, 10, 10)
+
+    print('x')

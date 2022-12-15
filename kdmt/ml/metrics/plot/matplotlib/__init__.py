@@ -1,3 +1,0 @@
-"""
-Matplotlib plotting code
-"""

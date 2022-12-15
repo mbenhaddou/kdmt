@@ -1,6 +1,43 @@
 import os, re
+from typing import Iterable, Union
+from itertools import chain
+import numpy as np
+
+def is_str_batch(batch: Iterable) -> bool:
+    """Checks if iterable argument contains string at any nesting level."""
+    while True:
+        if isinstance(batch, Iterable):
+            if isinstance(batch, str):
+                return True
+            elif isinstance(batch, np.ndarray):
+                return batch.dtype.kind == 'U'
+            else:
+                if len(batch) > 0:
+                    batch = batch[0]
+                else:
+                    return True
+        else:
+            return False
 
 
+def flatten_str_batch(batch: Union[str, Iterable]) -> Union[list, chain]:
+    """Joins all strings from nested lists to one ``itertools.chain``.
+
+    Args:
+        batch: List with nested lists to flatten.
+
+    Returns:
+        Generator of flat List[str]. For str ``batch`` returns [``batch``].
+
+    Examples:
+        >>> [string for string in flatten_str_batch(['a', ['b'], [['c', 'd']]])]
+        ['a', 'b', 'c', 'd']
+
+    """
+    if isinstance(batch, str):
+        return [batch]
+    else:
+        return chain(*[flatten_str_batch(sample) for sample in batch])
 
 
 def str_to_unicode(text, encoding=None, errors="strict"):

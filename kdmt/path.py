@@ -1,5 +1,6 @@
-from etils.epath import *
+#from etils.epath import *
 import os, stat
+from pathlib import Path
 
 def is_writable(path):
     # Ensure that it exists.
@@ -26,3 +27,9 @@ def is_writable(path):
     # Otherwise, we'll assume it's writable.
     # [xx] should we do other checks on other platforms?
     return True
+
+
+
+def expand_path(path):
+    """Convert relative paths to absolute with resolving user directory."""
+    return Path(path).expanduser().resolve()
