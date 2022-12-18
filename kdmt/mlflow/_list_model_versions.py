@@ -1,16 +1,14 @@
 """
 List all versions of all registered models with emphasis on if the version's backing run exists.
 """
+import os
 
 import click
 import pandas as pd
 import mlflow
 from tabulate import tabulate
 
-client = mlflow.tracking.MlflowClient("https://mentis.io/mlflow/")
-
-
-def list_view(models, get_latest):
+def list_view(client, models, get_latest):
     data = []
     for model in models:
         if get_latest:
@@ -41,15 +39,15 @@ def dt(ms):
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _get_model_versions(model, view, max_results):
+def _get_model_versions(client, model, view, max_results):
     if model == "all":
         models = client.search_registered_models(max_results=max_results)
     else:
         models = [ client.get_registered_model(model) ]
     if view in ["latest","both"]:
-        list_view(models, True)
+        list_view(client, models, True)
     if view in ["all","both"]:
-        list_view(models, False)
+        list_view(client, models, False)
     if view not in ["latest", "all","both"]:
         print(f"ERROR: Bad 'view' value '{view}'")
 

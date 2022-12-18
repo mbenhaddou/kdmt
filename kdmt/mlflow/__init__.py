@@ -1,12 +1,12 @@
 import mlflow
-import _mlflow_utils, _model_utils, _utils
+from kdmt.mlflow import _mlflow_utils, _model_utils, _utils
 import os, tabulate
-from _list_model_versions import _get_model_versions
+from kdmt.mlflow._list_model_versions import _get_model_versions
 import pandas as pd
 from mlflow.exceptions import RestException
 
 
-os.environ["MLFLOW_TRACKING_URI"] = "https://mentis.io/mlflow/"
+#os.environ["MLFLOW_TRACKING_URI"] = "https://mentis.io/mlflow/"
 try:
     client = mlflow.tracking.MlflowClient(os.environ['MLFLOW_TRACKING_URI'])
 except Exception as e:
@@ -115,7 +115,7 @@ def register_model(registered_model, run_id, model_artifact, stage):
         client.transition_model_version_stage(registered_model, version.version, stage)
 
 
-def get_production_version(model_name):
+def get_production_version(model_name, artifact_path=None):
     model=client.get_registered_model(model_name)
     for model_version in model.latest_versions:
         if model_version.current_stage=='Production':
@@ -126,16 +126,32 @@ def get_production_version(model_name):
 
     return None
 
+
+def download_model(run_id, artifact_path, output_dir):
+    """
+    Downloads the model associated with the model URI.
+    - For model scheme, downloads the model associated with the stage/version.
+    - For run scheme, downloads the model associated with the run ID and artifact.
+    :param: model_uri - MLflow model URI.
+    :param:output_dir - Output directory for downloaded model.
+    :return: The local path to the downloaded model.
+    """
+    return client.download_artifacts(run_id, artifact_path, dst_path=output_dir)
+
+
+def is_model_registered(model_name):
+    return model_name in  [m.name for m in client.search_registered_models()]
+
 if __name__ == "__main__":
     import mlflow
     import os
 
-    model=get_production_version("SklearnEstimator")
+    model=is_model_registered("SklearnEstimator")
     print(model)
 
     best_run=get_best_run('email_signature', "F1")
 
-    print(best_run)
+    download_model(best_run[0], 'current', ".")
 
 #    get_best_run("email_signature",
 #    "F1")
