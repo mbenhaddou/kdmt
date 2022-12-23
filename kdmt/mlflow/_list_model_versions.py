@@ -5,7 +5,11 @@ import os
 
 import click
 import pandas as pd
-import mlflow
+try:
+    import mlflow
+except:
+    pass
+
 from tabulate import tabulate
 
 def list_view(client, models, get_latest):

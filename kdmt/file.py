@@ -16,13 +16,10 @@ except:
     install_and_import('requests')
 import urllib.parse
 import zipfile
-try:
-    import simplejson
-except:
-    install_and_import('simplejson')
+
 import hashlib
 import shutil
-
+import simplejson
 
 
 
@@ -85,6 +82,8 @@ def read_file(filename, encoding="utf-8"):
 
 def read_json_file(filename, encoding="utf-8"):
     """Read json from a file."""
+    import simplejson
+
     content = read_file(filename, encoding=encoding)
     try:
         return simplejson.loads(content)

@@ -1,7 +1,9 @@
 import time
-from mlflow.exceptions import RestException
-from mlflow.entities.model_registry.model_version_status import ModelVersionStatus
-
+try:
+    from mlflow.exceptions import RestException
+    from mlflow.entities.model_registry.model_version_status import ModelVersionStatus
+except:
+    pass
 def delete_model(client, model_name):
     """ Delete a model and all its versions """
     try:

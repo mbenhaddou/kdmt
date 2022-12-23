@@ -1,5 +1,9 @@
 import os
-import mlflow
+try:
+    import mlflow
+except:
+    pass
+
 
 def dump_mlflow_info():
     """ Show basic MLflow information. """
@@ -16,6 +20,20 @@ def dump_mlflow_info():
 def get_mlflow_host():
     """ Returns the host (tracking URI) and token."""
     return get_mlflow_host_token()[0]
+
+def get_mlflow_client():
+    if "MLFLOW_TRACKING_URI" not in os.environ:
+        raise Exception("Could not get server URI. try to set the MLFLOW_TRACKING_URI variable. ")
+
+    try:
+        client = mlflow.tracking.MlflowClient(os.environ['MLFLOW_TRACKING_URI'])
+
+        print("MLflow Version:", mlflow.version.VERSION)
+        print("MLflow Tracking URI:", mlflow.get_tracking_uri())
+    except Exception as e:
+        raise Exception("Cannot conect to mlflow client, raised Exception: " + str(e))
+
+    return client
 
 
 def get_mlflow_host_token():
