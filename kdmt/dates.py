@@ -3,8 +3,10 @@ import datetime
 import math
 from dateutil.parser import parse
 import pandas as pd
+import numpy as np
 from pandas.core.tools.datetimes import _guess_datetime_format_for_array
 from typing import Iterable
+from kdmt.numerical import get_first_non_nan_value
 def is_date(string, fuzzy=False):
     """
     Return whether the string can be interpreted as a date.
@@ -266,7 +268,86 @@ def integer_to_datetime(num_integer, reference_date, day_min_unit='minute', date
 
     return new_date
 
+
+
+
+
+
+def cast_to_datetime64(value):
+    """Cast a given value to a ``numpy.datetime64`` format.
+
+    Args:
+        value (pandas.Series, np.ndarray, list, or str):
+            Input data to convert to ``numpy.datetime64``.
+
+    Return:
+        ``numpy.datetime64`` value or values.
+    """
+    if isinstance(value, str):
+        value = pd.to_datetime(value).to_datetime64()
+    elif isinstance(value, pd.Series):
+        value = value.astype('datetime64[ns]')
+    elif isinstance(value, (np.ndarray, list)):
+        value = np.array([
+            pd.to_datetime(item).to_datetime64()
+            if not pd.isna(item)
+            else pd.NaT.to_datetime64()
+            for item in value
+        ])
+
+    return value
+
+
+def get_datetime_diff(high, low, dtype='O'):
+    """Calculate the difference between two datetime columns.
+
+    When casting datetimes to float using ``astype``, NaT values are not automatically
+    converted to NaN values. This method calculates the difference between the high
+    and low column values, preserving missing values as NaNs.
+
+    Args:
+        high (numpy.ndarray):
+            The high column values.
+        low (numpy.ndarray):
+            The low column values.
+
+    Returns:
+        numpy.ndarray:
+            The difference between the high and low column values.
+    """
+    if dtype == 'O':
+        low = cast_to_datetime64(low)
+        high = cast_to_datetime64(high)
+
+    diff_column = high - low
+    nan_mask = np.isnan(diff_column)
+    diff_column = diff_column.astype(np.float64)
+    diff_column[nan_mask] = np.nan
+    return diff_column
+
+def matches_datetime_format(value, datetime_format):
+    """Check if datetime value matches the provided format.
+
+    Args:
+        value (str):
+            The datetime value.
+        datetime_format (str):
+            The datetime format to check for.
+
+    Return:
+        True if the value matches the format. Otherwise False.
+    """
+    try:
+        datetime.strptime(value, datetime_format)
+    except Exception:
+        return False
+
+    return True
+
 if __name__ == "__main__":
     num=days_ahead_from_date("02-09-2022 16:20:00", 4, date_format='%d-%m-%Y %H:%M:%S')
     print(num)
 #    print(integer_to_datetime(num, reference_date="29-08-2022 00:00:00", day_min_unit='hour'))
+
+
+
