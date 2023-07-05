@@ -166,6 +166,21 @@ def get_all_elems_from_json(search_json: dict, search_key: str) -> list:
     return result
 
 
+def write_json_to_file(filename, obj, **kwargs):
+    # type: (Text, Any) -> None
+    """Write an object as a json string to a file."""
+
+    write_to_file(filename, json_to_string(obj, **kwargs))
+
+
+
+
+def write_to_file(filename, text):
+    # type: (Text, Text) -> None
+    """Write a text to a file."""
+
+    with io.open(filename, 'w', encoding="utf-8") as f:
+        f.write(str(text))
 def create_dir(folder_name, force_perm=None):
     """Create the specified folder.
 

@@ -98,7 +98,7 @@ def classification_report(y_true, y_pred, target_names, normalize=False):
     return cr
 
 
-@validate.argument_is_proportion('top_proportion')
+
 def precision_at(y_true, y_score, top_proportion, ignore_nas=False):
     '''
     Calculates precision at a given proportion.
@@ -144,35 +144,33 @@ def __precision(y_true, y_pred):
     return precision
 
 
-@validate.argument_is_proportion('top_proportion')
+
 def tp_at(y_true, y_score, top_proportion):
     y_pred = binarize.scores_at_top_proportion(y_score, top_proportion)
     tp = (y_pred == 1) & (y_true == 1)
     return tp.sum()
 
 
-@validate.argument_is_proportion('top_proportion')
+
 def fp_at(y_true, y_score, top_proportion):
     y_pred = binarize.scores_at_top_proportion(y_score, top_proportion)
     fp = (y_pred == 1) & (y_true == 0)
     return fp.sum()
 
 
-@validate.argument_is_proportion('top_proportion')
+
 def tn_at(y_true, y_score, top_proportion):
     y_pred = binarize.scores_at_top_proportion(y_score, top_proportion)
     tn = (y_pred == 0) & (y_true == 0)
     return tn.sum()
 
 
-@validate.argument_is_proportion('top_proportion')
 def fn_at(y_true, y_score, top_proportion):
     y_pred = binarize.scores_at_top_proportion(y_score, top_proportion)
     fn = (y_pred == 0) & (y_true == 1)
     return fn.sum()
 
 
-@validate.argument_is_proportion('top_proportion')
 def labels_at(y_true, y_score, top_proportion, normalize=False):
     '''
         Return the number of labels encountered in the top  Y proportion
