@@ -8,7 +8,7 @@ import math
 import numpy as np
 
 
-def Point(x, y, dtype=np.float):
+def Point(x, y, dtype=np.float32):
     """Create a point in 2D space at <x>, <y>"""
     return np.array((x, y), dtype=dtype)
 
